@@ -88,5 +88,6 @@ ENV/
 # Rope project settings
 .ropeproject
 
-# Twitter-related
+# Project-related
 credentials.py
+.bak
