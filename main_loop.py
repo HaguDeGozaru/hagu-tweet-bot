@@ -72,7 +72,7 @@ class HaguEigoBot:
                 return None
             next_tweets.append(feed_data[self.feed_index]['tweet'])
             print(feed_data[self.feed_index]['chain'])
-            while feed_data[self.feed_index]['chain'] and self.feed_index > len(feed_data):
+            while feed_data[self.feed_index]['chain'] and self.feed_index < len(feed_data):
                 print("Okay")
                 self.feed_index += 1
                 next_tweets.append(feed_data[self.feed_index]['tweet'])
@@ -83,8 +83,10 @@ class HaguEigoBot:
     def get_next_tweet_datetime(self):
         """ Gets the next datetime at which tweeting will occur. """
         if len(self.tweet_times) > 0:
-            now_t = datetime.datetime.today()
+            now_t = datetime.datetime.now()
             next_t = now_t
+            if not self.twitter: #Don't use realtime if simulating
+                return datetime.datetime.now() + datetime.timedelta(seconds=5)
             if (
                     self.tweet_times[-1][0] < now_t.hour or
                     (
@@ -99,13 +101,14 @@ class HaguEigoBot:
                     self.tweet_times[-1][1] == now_t.minute
                 ):
                 # DO IT NOW!!
-                return datetime.datetime.today()
+                print("Return now")
+                return datetime.datetime.now()
 
             for time in self.tweet_times:
                 # Pick apart time tuple, put in next_t
                 next_t = next_t.replace(hour=time[0], minute=time[1])
                 if now_t < next_t: # If next_t is in the future
-                    return next_t
+                    return next_t.replace(second=0)
 
         #No viable times were found
         return None
@@ -131,19 +134,20 @@ class HaguEigoBot:
             next_tweets = self.load_next_tweets()
             # Sleep until time in config
             delta = self.get_next_tweet_datetime() - datetime.datetime.now()
+            print(self.get_next_tweet_datetime())
+            print(datetime.datetime.now())
+            print(delta.total_seconds())
             sleep(delta.total_seconds())
-            for tweet in next_tweets:
-                print('{} {} of {}'.format(tweet, next_index, self.feed_length))
+            for j in range(len(next_tweets)):
+                print('{} {} of {}'.format(next_tweets[j], next_index + j, self.feed_length))
             if self.twitter:
                 for tweet in next_tweets:
                     self.twitter.update_status(
                         '{}\n{} of {}'.format(tweet, next_index, self.feed_length)
                     )
                     next_index += 1
-                    sleep(5)
+                    sleep(10)
 
-            #now = datetime.datetime.today()
-            #datetime.date
 
 bot = HaguEigoBot(True)
 bot.start()

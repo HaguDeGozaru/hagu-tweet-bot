@@ -1,14 +1,10 @@
 [
   {
-    "tweet": "Reading from JSON object... Success.",
-    "chain": false
-  },
-  {
     "tweet": "Tweeting consecutive JSON objects...",
     "chain": true
   },
   {
-    "tweet": "Success.",
+    "tweet": "Success. Fixed it pretty quickly, eh?",
     "chain": false
   }
 ]
