@@ -5,15 +5,22 @@ from shutil import copyfile
 from time import sleep
 import datetime
 import json
+from flags import Flags
 import credentials
 import tweepy
 
-'''
-authorization = tweepy.OAuthHandler(consumer_key, consumer_secret)
-authorization.set_access_token(access_token, access_token_secret)
-twitter = tweepy.API(auth)
-'''
-'''twitter.update_status('Hello world!')'''
+class FunctionFlags(Flags):
+    __pickle_int_flags__ = True
+    __no_flags_name__ = 'TweetOffline'
+    __all_flags_name__ = 'Full'
+
+class BotFunctions(FunctionFlags):
+    """ Determines the functionality of a bot while running """
+    #TODO: Finish implementation of function selection
+    TweetTimed = 1
+    Log = 2 #Unimplemented
+    Interact = 4 #Unimplemented
+
 class HaguEigoBot:
     '''
     While running, refreshes a JSON feed and settings file periodically
@@ -26,25 +33,33 @@ class HaguEigoBot:
     OUTPUT = "output.json"
     OUTPUT_BACKUP = "output.json.bak"
 
-    def __init__(self, run_offline):
+    def __init__(self, functionality=0):
         """
         Create an instance of a HaguEigoBot,
         acquire authorization from Twitter (or run offline)
         """
+        self.functionality = functionality
         self.authorization = None
-        self.twitter = None
+        self.twitter_api = None
+        #TODO: self.twitter_stream = None
         self.tweet_times = []
         self.feed_index = 0
         self.feed_length = 0
-        if run_offline != True:
+        self.min_tweet_delay = 10
+        self.load_config() # Get tweeting times and current feed_index
+        if functionality: #API is required
             self.authorization = tweepy.OAuthHandler(
                 credentials.consumer_key, credentials.consumer_secret
             )
             self.authorization.set_access_token(
                 credentials.access_token, credentials.access_token_secret
             )
-            self.twitter = tweepy.API(self.authorization)
-        self.load_config()
+            self.twitter_api = tweepy.API(self.authorization)
+            if functionality > BotFunctions.TweetTimed: #Stream is required
+                raise NotImplementedError("The Twitter stream functionality isn't ready yet.")
+        else:
+            self.min_tweet_delay = 2
+
 
     def load_config(self):
         """
@@ -76,7 +91,7 @@ class HaguEigoBot:
                 print("Okay")
                 self.feed_index += 1
                 next_tweets.append(feed_data[self.feed_index]['tweet'])
-            
+
             self.feed_index += 1 # Final increment
         return next_tweets
 
@@ -85,8 +100,10 @@ class HaguEigoBot:
         if len(self.tweet_times) > 0:
             now_t = datetime.datetime.now()
             next_t = now_t
-            if not self.twitter: #Don't use realtime if simulating
-                return datetime.datetime.now() + datetime.timedelta(seconds=5)
+            if not self.functionality:
+                #Don't use config's times if simulating
+                return datetime.datetime.now() + datetime.timedelta(seconds=self.min_tweet_delay)
+
             if (
                     self.tweet_times[-1][0] < now_t.hour or
                     (
@@ -128,7 +145,7 @@ class HaguEigoBot:
     def start(self):
         """ Begin normal functionality loop. """
         # Currently only runs through tweet times.
-        for i in range(len(self.tweet_times)):
+        for my_time in self.tweet_times:
             # Get next tweet ready
             next_index = self.feed_index + 1
             next_tweets = self.load_next_tweets()
@@ -138,16 +155,25 @@ class HaguEigoBot:
             print(datetime.datetime.now())
             print(delta.total_seconds())
             sleep(delta.total_seconds())
-            for j in range(len(next_tweets)):
-                print('{} {} of {}'.format(next_tweets[j], next_index + j, self.feed_length))
-            if self.twitter:
+            for idx, tweet in enumerate(next_tweets):
+                print('{} {} of {}'.format(tweet, next_index + idx, self.feed_length))
+            if BotFunctions.TweetTimed in self.functionality:
                 for tweet in next_tweets:
-                    self.twitter.update_status(
+                    self.twitter_api.update_status(
                         '{}\n{} of {}'.format(tweet, next_index, self.feed_length)
                     )
                     next_index += 1
-                    sleep(10)
+                    sleep(self.min_tweet_delay)
 
+def main():
+    """ Main body for starting up and terminating HaguEigoBot """
+    # pylint: disable=no-member
+    try:
+        bot = HaguEigoBot(BotFunctions.TweetOffline)
+        bot.start()
 
-bot = HaguEigoBot(True)
-bot.start()
+    except KeyboardInterrupt:
+        print("Terminated at console.")
+
+if __name__ == '__main__':
+    main()

@@ -1,10 +1,6 @@
 [
   {
-    "tweet": "Tweeting consecutive JSON objects...",
-    "chain": true
-  },
-  {
-    "tweet": "Success. Fixed it pretty quickly, eh?",
+    "tweet": "Testing functionality flags class... Success.",
     "chain": false
   }
 ]
