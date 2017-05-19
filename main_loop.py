@@ -3,25 +3,40 @@ import os
 import re
 from shutil import copyfile
 from time import sleep
+from threading import Thread
 import datetime
 import json
+from enum import Enum
 from flags import Flags
 import credentials
 import tweepy
 
 class FunctionFlags(Flags):
+    """ Base class for BotFunctions """
     __pickle_int_flags__ = True
     __no_flags_name__ = 'TestOffline'
     __all_flags_name__ = 'Full'
 
 class BotFunctions(FunctionFlags):
     """ Determines the functionality of a bot while running """
-    #TODO: Finish implementation of function selection
-    TweetTimed = 1
-    Log = 2 #Unimplemented
+    LogStream = 1
+    TweetTimed = 2
     Interact = 4 #Unimplemented
 
-class HaguEigoBot:
+#Event JSON: [{time, code, text}]
+class BotEvents(Enum):
+    """ Event codes for saving to output JSON """
+    SYS_Start = ()
+    SYS_Stop = ()
+    USR_Tweet = ()
+    USR_GetReply = ()
+    USR_GiveReply = ()
+    USR_GetDM = ()
+    USR_GiveDM = ()
+    ERR_KeyboardInterrupt = ()
+    ERR_Communications = ()
+
+class HaguEigoBot(tweepy.StreamListener):
     '''
     While running, refreshes a JSON feed and settings file periodically
     so as to deliver content to Twitter. Also, responds to Twitter inputs.
@@ -33,35 +48,27 @@ class HaguEigoBot:
     OUTPUT = "output.json"
     OUTPUT_BACKUP = "output.json.bak"
 
-    def __init__(self, functionality=0):
+    def __init__(self, functionality=0, api=None):
         """
         Create an instance of a HaguEigoBot,
         acquire authorization from Twitter (or run offline)
         """
+        self.running = False
+        self._tweet_thread = None
+        tweepy.StreamListener.__init__(api) #self.api becomes active
         self.functionality = functionality
-        self.authorization = None
-        self.twitter_api = None
-        #TODO: self.twitter_stream = None
         self.tweet_times = []
+        self.event_log = []
         self.feed_index = 0
         self.feed_length = 0
         self.min_tweet_delay = 10
         self.load_config() # Get tweeting times and current feed_index
-        if functionality: #API is required
-            self.authorization = tweepy.OAuthHandler(
-                credentials.consumer_key, credentials.consumer_secret
-            )
-            self.authorization.set_access_token(
-                credentials.access_token, credentials.access_token_secret
-            )
-            self.twitter_api = tweepy.API(self.authorization)
-            if functionality > BotFunctions.TweetTimed: #Stream is required
-                raise NotImplementedError("The Twitter stream functionality isn't ready yet.")
-        else:
+        if functionality < BotFunctions.LogStream:
             # Testing offline
-            print("-- Offline test of functionality --")
             self.min_tweet_delay = 0.5
-
+            self.running = True
+            print(self.running)
+            self._start_tweeting()
 
     def load_config(self):
         """
@@ -77,6 +84,26 @@ class HaguEigoBot:
                 )
         #TODO: Load output.json and set feed_index to resume from last session
 
+    def on_connect(self):
+        """Called once connected to streaming server.
+
+        This will be invoked once a successful response
+        is received from the server. Allows the listener
+        to perform some work prior to entering the read loop.
+        """
+        print("Connection established. Starting tweeting loop")
+        if self.functionality > BotFunctions.LogStream:
+            self._start_tweeting()
+
+    def on_direct_message(self, status):
+        """Called when a new direct message arrives"""
+        try:
+            if status.direct_message['sender_screen_name'] != self.api.me.screen_name:
+                self.log_event(BotEvents.USR_GetDM, str(status.direct_message))
+            return True
+        except BaseException as my_event:
+            self.log_event(BotEvents.ERR_Communications, str(my_event), False)
+
     def load_next_tweets(self):
         """ Loads feed data necessary for the next tweet batch. """
         print("Current feed index = " + str(self.feed_index))
@@ -84,8 +111,9 @@ class HaguEigoBot:
         with open(HaguEigoBot.FEED, encoding="utf8") as feed_json:
             feed_data = json.load(feed_json)
             self.feed_length = len(feed_data)
-            if self.feed_index > len(feed_data):
+            if self.feed_index >= len(feed_data):
                 return None
+            print("Feed index: " + str(self.feed_index))
             next_tweets.append(feed_data[self.feed_index]['tweet'])
             while feed_data[self.feed_index]['chain'] and self.feed_index < len(feed_data):
                 self.feed_index += 1
@@ -111,13 +139,11 @@ class HaguEigoBot:
                     )
                 ): #Add a day if it's too late
                 next_t = next_t + datetime.timedelta(days=1)
-                print("Trying tomorrow")
             elif (
                     self.tweet_times[-1][0] == now_t.hour and
                     self.tweet_times[-1][1] == now_t.minute
                 ):
                 # DO IT NOW!!
-                print("Return now")
                 return datetime.datetime.now()
 
             for time in self.tweet_times:
@@ -129,47 +155,82 @@ class HaguEigoBot:
         #No viable times were found
         return None
 
-    def write_report(self):
-        """ Writes to output.json to save progress and action log. """
-        all_log_data = None
+    def log_event(self, ev_type, text="", save=True):
+        """ Add an event to the event log before potentially saving. """
+        event = dict()
+        event['type'] = str(ev_type)
+        event['text'] = text
+        event['time'] = str(datetime.datetime.now())
+        self.event_log.append(event)
+        if save:
+            self._save_event_log()
+
+    def _save_event_log(self):
+        """
+        Writes to output.json to save progress and action log.
+        Usually performed after adding an event.
+        """
+        all_log_data = []
         if os.path.exists(HaguEigoBot.OUTPUT):
             with open(HaguEigoBot.OUTPUT, 'r') as output_json:
-                all_log_data = json.load(output_json)
+                if output_json.read(3):
+                    output_json.seek(0)
+                    all_log_data = json.load(output_json)
             copyfile(HaguEigoBot.OUTPUT, HaguEigoBot.OUTPUT_BACKUP)
             os.remove(HaguEigoBot.OUTPUT)
-        #TODO Add new log data to 'all log data', flush log
-        with open(HaguEigoBot.OUTPUT, 'w') as output_json:
-            json.dump(all_log_data, output_json, indent=4)
+        if self.event_log:
+            all_log_data = all_log_data + self.event_log
+            with open(HaguEigoBot.OUTPUT, 'w') as output_json:
+                json.dump(all_log_data, output_json, indent=4)
+            return True
+        return False #Nothing was changed
 
-    def start(self):
+    def _start_tweeting(self):
         """ Begin normal functionality loop. """
-        # Currently only runs through tweet times.
-        for my_time in self.tweet_times:
+        self.log_event(BotEvents.SYS_Start, str(self.functionality))
+        self._tweet_thread = Thread(target=self._tweet_loop)
+        self._tweet_thread.start()
+
+
+    def _tweet_loop(self):
+        """ Loop for tweeting, while the stream is open. """
+        while self.running:
             # Get next tweet ready
             next_index = self.feed_index + 1
             next_tweets = self.load_next_tweets()
             # Sleep until time in config
             delta = self.get_next_tweet_datetime() - datetime.datetime.now()
             sleep(delta.total_seconds())
+            self.log_event(BotEvents.USR_Tweet, str(next_tweets))
             for idx, tweet in enumerate(next_tweets):
-                print('{} {} of {}'.format(tweet, next_index + idx, self.feed_length))
+                print('Tweet {} of {}'.format(next_index + idx, self.feed_length))
             if BotFunctions.TweetTimed in self.functionality:
                 for tweet in next_tweets:
-                    self.twitter_api.update_status(
+                    self.api.update_status(
                         '{}\n{} of {}'.format(tweet, next_index, self.feed_length)
                     )
                     next_index += 1
                     sleep(self.min_tweet_delay)
+        # Running was made false for some reason
+        self.log_event(BotEvents.SYS_Stop)
 
 def main():
     """ Main body for starting up and terminating HaguEigoBot """
     # pylint: disable=no-member
     try:
-        bot = HaguEigoBot(BotFunctions.TestOffline)
-        bot.start()
+        authorization = tweepy.OAuthHandler(
+            credentials.consumer_key, credentials.consumer_secret
+        )
+        authorization.set_access_token(
+            credentials.access_token, credentials.access_token_secret
+        )
+        api = tweepy.API(authorization)
+        bot = HaguEigoBot(BotFunctions.TestOffline, api)
+        #stream = tweepy.Stream(authorization, bot)
 
     except KeyboardInterrupt:
-        print("Terminated at console.")
+        bot.log_events("Terminated at console.")
+        bot.disconnect()
 
 if __name__ == '__main__':
     main()
