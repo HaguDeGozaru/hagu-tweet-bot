@@ -2,5 +2,13 @@
   {
     "tweet": "Testing functionality flags class... Success.",
     "chain": false
+  },
+  {
+    "tweet": "Testing live feed update... Success.\n今度こそ今日はこれでOKだ",
+    "chain": true
+  },
+  {
+    "tweet": "Testing consecutive tweet.",
+    "chain": false
   }
 ]

@@ -11,7 +11,7 @@ import tweepy
 
 class FunctionFlags(Flags):
     __pickle_int_flags__ = True
-    __no_flags_name__ = 'TweetOffline'
+    __no_flags_name__ = 'TestOffline'
     __all_flags_name__ = 'Full'
 
 class BotFunctions(FunctionFlags):
@@ -58,7 +58,9 @@ class HaguEigoBot:
             if functionality > BotFunctions.TweetTimed: #Stream is required
                 raise NotImplementedError("The Twitter stream functionality isn't ready yet.")
         else:
-            self.min_tweet_delay = 2
+            # Testing offline
+            print("-- Offline test of functionality --")
+            self.min_tweet_delay = 0.5
 
 
     def load_config(self):
@@ -73,22 +75,19 @@ class HaguEigoBot:
                 self.tweet_times.append(
                     [int(x) for x in re.search(r'0?([12]?\d):0?([1-5]?\d)', time_str).groups()]
                 )
-            print(self.tweet_times)
         #TODO: Load output.json and set feed_index to resume from last session
 
     def load_next_tweets(self):
         """ Loads feed data necessary for the next tweet batch. """
         print("Current feed index = " + str(self.feed_index))
         next_tweets = []
-        with open(HaguEigoBot.FEED) as feed_json:
+        with open(HaguEigoBot.FEED, encoding="utf8") as feed_json:
             feed_data = json.load(feed_json)
             self.feed_length = len(feed_data)
             if self.feed_index > len(feed_data):
                 return None
             next_tweets.append(feed_data[self.feed_index]['tweet'])
-            print(feed_data[self.feed_index]['chain'])
             while feed_data[self.feed_index]['chain'] and self.feed_index < len(feed_data):
-                print("Okay")
                 self.feed_index += 1
                 next_tweets.append(feed_data[self.feed_index]['tweet'])
 
@@ -102,7 +101,7 @@ class HaguEigoBot:
             next_t = now_t
             if not self.functionality:
                 #Don't use config's times if simulating
-                return datetime.datetime.now() + datetime.timedelta(seconds=self.min_tweet_delay)
+                return datetime.datetime.now() + datetime.timedelta(seconds=self.min_tweet_delay*4)
 
             if (
                     self.tweet_times[-1][0] < now_t.hour or
@@ -151,9 +150,6 @@ class HaguEigoBot:
             next_tweets = self.load_next_tweets()
             # Sleep until time in config
             delta = self.get_next_tweet_datetime() - datetime.datetime.now()
-            print(self.get_next_tweet_datetime())
-            print(datetime.datetime.now())
-            print(delta.total_seconds())
             sleep(delta.total_seconds())
             for idx, tweet in enumerate(next_tweets):
                 print('{} {} of {}'.format(tweet, next_index + idx, self.feed_length))
@@ -169,7 +165,7 @@ def main():
     """ Main body for starting up and terminating HaguEigoBot """
     # pylint: disable=no-member
     try:
-        bot = HaguEigoBot(BotFunctions.TweetOffline)
+        bot = HaguEigoBot(BotFunctions.TestOffline)
         bot.start()
 
     except KeyboardInterrupt:
