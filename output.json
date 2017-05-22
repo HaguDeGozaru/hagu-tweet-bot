@@ -140,14 +140,14 @@
         "time": "2017-05-19 21:36:46.375395"
     },
     {
-        "time": "2017-05-19 21:36:46.375395",
+        "type": "BotEvents.SYS_Start",
         "text": "BotFunctions()",
-        "type": "BotEvents.SYS_Start"
+        "time": "2017-05-19 21:36:46.375395"
     },
     {
-        "time": "2017-05-19 21:36:48.397481",
+        "type": "BotEvents.SYS_Start",
         "text": "['Testing functionality flags class... Success.']",
-        "type": "BotEvents.SYS_Start"
+        "time": "2017-05-19 21:36:48.397481"
     },
     {
         "type": "BotEvents.SYS_Start",
@@ -165,23 +165,383 @@
         "time": "2017-05-19 21:36:50.404075"
     },
     {
-        "time": "2017-05-19 21:36:46.375395",
+        "type": "BotEvents.SYS_Start",
         "text": "BotFunctions()",
-        "type": "BotEvents.SYS_Start"
+        "time": "2017-05-19 21:36:46.375395"
     },
     {
-        "time": "2017-05-19 21:36:48.397481",
+        "type": "BotEvents.SYS_Start",
         "text": "['Testing functionality flags class... Success.']",
-        "type": "BotEvents.SYS_Start"
+        "time": "2017-05-19 21:36:48.397481"
     },
     {
-        "time": "2017-05-19 21:36:50.404075",
+        "type": "BotEvents.SYS_Start",
         "text": "['Testing live feed update... Success.', 'Testing consecutive tweet.']",
-        "type": "BotEvents.SYS_Start"
+        "time": "2017-05-19 21:36:50.404075"
     },
     {
-        "time": "2017-05-19 21:36:52.424592",
+        "type": "BotEvents.SYS_Start",
         "text": "None",
-        "type": "BotEvents.SYS_Start"
+        "time": "2017-05-19 21:36:52.424592"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "BotFunctions()",
+        "time": "2017-05-22 11:26:04.921619"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "BotFunctions()",
+        "time": "2017-05-22 11:26:04.921619"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "1 tweet starting at 1",
+        "time": "2017-05-22 11:26:06.941822"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "BotFunctions()",
+        "time": "2017-05-22 11:26:04.921619"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "1 tweet starting at 1",
+        "time": "2017-05-22 11:26:06.941822"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "2 tweets starting at 2",
+        "time": "2017-05-22 11:26:08.951580"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "BotFunctions()",
+        "time": "2017-05-22 11:37:35.360589"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "BotFunctions()",
+        "time": "2017-05-22 11:37:35.360589"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "1 tweet starting at 1",
+        "time": "2017-05-22 11:37:37.373295"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "BotFunctions()",
+        "time": "2017-05-22 11:37:35.360589"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "1 tweet starting at 1",
+        "time": "2017-05-22 11:37:37.373295"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "2 tweets starting at 2",
+        "time": "2017-05-22 11:37:39.395259"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "BotFunctions()",
+        "time": "2017-05-22 11:37:35.360589"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "1 tweet starting at 1",
+        "time": "2017-05-22 11:37:37.373295"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "2 tweets starting at 2",
+        "time": "2017-05-22 11:37:39.395259"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Ran out of tweets.",
+        "time": "2017-05-22 11:37:39.395259"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "BotFunctions()",
+        "time": "2017-05-22 11:49:50.234149"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "BotFunctions()",
+        "time": "2017-05-22 11:49:50.234149"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1",
+        "time": "2017-05-22 11:49:52.242953"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "BotFunctions()",
+        "time": "2017-05-22 11:49:50.234149"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1",
+        "time": "2017-05-22 11:49:52.242953"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "2 tweets starting at 2",
+        "time": "2017-05-22 11:49:54.247752"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "BotFunctions()",
+        "time": "2017-05-22 11:49:50.234149"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1",
+        "time": "2017-05-22 11:49:52.242953"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "2 tweets starting at 2",
+        "time": "2017-05-22 11:49:54.247752"
+    },
+    {
+        "type": "BotEvents.SYS_Stop",
+        "text": "Ran out of tweets.",
+        "time": "2017-05-22 11:49:54.258271"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "",
+        "time": "2017-05-22 11:55:03.880242"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "",
+        "time": "2017-05-22 11:55:03.880242"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1",
+        "time": "2017-05-22 11:55:05.897271"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "",
+        "time": "2017-05-22 11:55:03.880242"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1",
+        "time": "2017-05-22 11:55:05.897271"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "2 tweets starting at 2",
+        "time": "2017-05-22 11:55:07.908400"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "",
+        "time": "2017-05-22 11:55:03.880242"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1",
+        "time": "2017-05-22 11:55:05.897271"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "2 tweets starting at 2",
+        "time": "2017-05-22 11:55:07.908400"
+    },
+    {
+        "type": "BotEvents.SYS_Stop",
+        "text": "Ran out of tweets.",
+        "time": "2017-05-22 11:55:07.913399"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:01:21.084228"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:01:21.084228"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1",
+        "time": "2017-05-22 12:01:23.109312"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:01:21.084228"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1",
+        "time": "2017-05-22 12:01:23.109312"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "2 tweets starting at 2",
+        "time": "2017-05-22 12:01:25.125138"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:01:21.084228"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1",
+        "time": "2017-05-22 12:01:23.109312"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "2 tweets starting at 2",
+        "time": "2017-05-22 12:01:25.125138"
+    },
+    {
+        "type": "BotEvents.SYS_Stop",
+        "text": "Ran out of tweets.",
+        "time": "2017-05-22 12:01:25.125138"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:17:05.181333"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:17:05.181333"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1 (FUNCTEST)",
+        "time": "2017-05-22 12:17:07.216686"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:17:05.181333"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1 (FUNCTEST)",
+        "time": "2017-05-22 12:17:07.216686"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "2 tweets starting at 2 (CHAINTEST2)",
+        "time": "2017-05-22 12:17:09.223874"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:17:05.181333"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1 (FUNCTEST)",
+        "time": "2017-05-22 12:17:07.216686"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "2 tweets starting at 2 (CHAINTEST2)",
+        "time": "2017-05-22 12:17:09.223874"
+    },
+    {
+        "type": "BotEvents.SYS_Stop",
+        "text": "Ran out of tweets.",
+        "time": "2017-05-22 12:17:09.229876"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:25:26.417592"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:25:26.417592"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1 (FEEDFORMAT)",
+        "time": "2017-05-22 12:26:00.437950"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:30:06.150651"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:30:35.416100"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:30:35.416100"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1 (FEEDFORMAT)",
+        "time": "2017-05-22 12:31:00.426356"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:30:35.416100"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1 (FEEDFORMAT)",
+        "time": "2017-05-22 12:31:00.426356"
+    },
+    {
+        "type": "BotEvents.SYS_Stop",
+        "text": "Ran out of tweets.",
+        "time": "2017-05-22 12:31:03.893036"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:35:07.800380"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:35:07.800380"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1 (FEEDFORMAT)",
+        "time": "2017-05-22 12:35:09.826585"
+    },
+    {
+        "type": "BotEvents.SYS_Start",
+        "text": "Offline testing",
+        "time": "2017-05-22 12:35:07.800380"
+    },
+    {
+        "type": "BotEvents.USR_Tweet",
+        "text": "1 tweet starting at 1 (FEEDFORMAT)",
+        "time": "2017-05-22 12:35:09.826585"
+    },
+    {
+        "type": "BotEvents.SYS_Stop",
+        "text": "Ran out of tweets.",
+        "time": "2017-05-22 12:35:09.826585"
     }
 ]

@@ -1,14 +1,7 @@
 [
   {
-    "tweet": "Testing functionality flags class... Success.",
-    "chain": false
-  },
-  {
-    "tweet": "Testing live feed update... Success.",
-    "chain": true
-  },
-  {
-    "tweet": "Testing consecutive tweet.",
+    "title": "FEEDFORMAT",
+    "text": "Testing new feed format... Success.",
     "chain": false
   }
 ]
