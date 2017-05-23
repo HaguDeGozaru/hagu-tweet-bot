@@ -1,7 +1,17 @@
 [
   {
     "title": "FEEDFORMAT",
-    "text": "Testing new feed format... Success.",
+    "text": "Testing first... Success.",
+    "chain": false
+  },
+  {
+    "title": "FEEDFORMAT2",
+    "text": "Testing second... Success.",
+    "chain": false
+  },
+  {
+    "title": "FEEDFORMAT3",
+    "text": "Testing third... Success.",
     "chain": false
   }
 ]

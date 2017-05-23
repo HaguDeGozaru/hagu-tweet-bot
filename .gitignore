@@ -90,5 +90,5 @@ ENV/
 
 # Project-related
 credentials.py
-.json.back
+.json.bak
 .bak

@@ -1,0 +1,6 @@
+3
+05/23/17 18:58:55,BotEvents.SYS_Setup,Offline testing
+05/23/17 18:58:57,BotEvents.USR_Tweet,1 tweet starting at 1 (FEEDFORMAT)
+05/23/17 18:58:59,BotEvents.USR_Tweet,1 tweet starting at 2 (FEEDFORMAT2)
+05/23/17 18:59:01,BotEvents.USR_Tweet,1 tweet starting at 3 (FEEDFORMAT3)
+05/23/17 18:59:01,BotEvents.SYS_Stop,Ran out of tweets.

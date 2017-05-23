@@ -6,6 +6,7 @@ from time import sleep
 from threading import Thread
 import datetime
 import json
+import csv
 from enum import Enum
 from flags import Flags
 import credentials
@@ -27,7 +28,7 @@ class BotFunctions(FunctionFlags):
 #Event JSON: [{time, code, text}]
 class BotEvents(Enum):
     """ Event codes for saving to output JSON """
-    SYS_Start = 1
+    SYS_Setup = 1
     SYS_Stop = 2
     USR_Tweet = 3
     USR_GetReply = 4
@@ -36,6 +37,16 @@ class BotEvents(Enum):
     USR_GiveDM = 7
     ERR_KeyboardInterrupt = 8
     ERR_Communications = 9
+
+''' Log Format
+
+int last_index
+list events []
+    string "type": "BotEvents.SYS_Start",
+    string "text": "BotFunctions()",
+    string "time": "2017-05-19 21:26:45.656315"
+
+'''
 
 class HaguEigoBot(tweepy.StreamListener):
     '''
@@ -46,8 +57,7 @@ class HaguEigoBot(tweepy.StreamListener):
     '''
     FEED = "feed.json"
     CONFIG = "config.json"
-    OUTPUT = "output.json"
-    OUTPUT_BACKUP = "output.json.bak"
+    OUTPUT = "output.csv"
 
     def __init__(self, functionality=BotFunctions(), api=None):
         """
@@ -83,7 +93,17 @@ class HaguEigoBot(tweepy.StreamListener):
                 self.tweet_times.append(
                     [int(x) for x in re.search(r'0?([12]?\d):0?([1-5]?\d)', time_str).groups()]
                 )
-        #TODO: Load output.json and set feed_index to resume from last session
+
+        if os.path.exists(HaguEigoBot.OUTPUT):
+            #Load last feed_index
+            with open(HaguEigoBot.OUTPUT) as logfile:
+                top = logfile.readline()
+                self.feed_index = int(top) if len(top) > 0 else 0
+
+        log_str = "Offline testing"
+        if self.functionality >= BotFunctions.LogStream:
+            log_str = str(self.functionality)
+        self.log_event(BotEvents.SYS_Setup, log_str, False)
 
     def on_connect(self):
         """Called once connected to streaming server.
@@ -92,7 +112,7 @@ class HaguEigoBot(tweepy.StreamListener):
         is received from the server. Allows the listener
         to perform some work prior to entering the read loop.
         """
-        print("Connection established. Starting tweeting loop")
+        print("Connection established.")
         if BotFunctions.TweetTimed in self.functionality:
             self._start_tweeting()
 
@@ -159,9 +179,9 @@ class HaguEigoBot(tweepy.StreamListener):
     def log_event(self, ev_type, text="", save=True):
         """ Add an event to the event log before potentially saving. """
         event = dict()
+        event['time'] = datetime.datetime.now().strftime("%m/%d/%y %H:%M:%S")
         event['type'] = str(ev_type)
         event['text'] = text
-        event['time'] = str(datetime.datetime.now())
         self.event_log.append(event)
         if save:
             self._save_event_log()
@@ -171,27 +191,20 @@ class HaguEigoBot(tweepy.StreamListener):
         Writes to output.json to save progress and action log.
         Usually performed after adding an event.
         """
-        all_log_data = []
-        if os.path.exists(HaguEigoBot.OUTPUT):
-            with open(HaguEigoBot.OUTPUT, 'r') as output_json:
-                if output_json.read(3):
-                    output_json.seek(0)
-                    all_log_data = json.load(output_json)
-            copyfile(HaguEigoBot.OUTPUT, HaguEigoBot.OUTPUT_BACKUP)
-            os.remove(HaguEigoBot.OUTPUT)
-        if self.event_log:
-            all_log_data = all_log_data + self.event_log
-            with open(HaguEigoBot.OUTPUT, 'w') as output_json:
-                json.dump(all_log_data, output_json, indent=4)
-            return True
-        return False #Nothing was changed
+        # Overwrite header data (not CSV header)
+        print("writing")
+        touch = open(HaguEigoBot.OUTPUT, 'a')
+        touch.close()
+        with open(HaguEigoBot.OUTPUT, 'r+', newline='\n') as outfile:
+            outfile.write(str(self.feed_index) + '\n')
+            outfile.seek(0, os.SEEK_END) #Jump to the end to append
+            print(outfile.readline())
+            csv_writer = csv.DictWriter(outfile, ['time', 'type', 'text'])
+            csv_writer.writerows(self.event_log)
+            self.event_log = []
 
     def _start_tweeting(self):
         """ Begin normal functionality loop. """
-        log_str = "Offline testing"
-        if self.functionality >= BotFunctions.LogStream:
-            log_str = str(self.functionality)
-        self.log_event(BotEvents.SYS_Start, log_str)
 
         self._tweet_thread = Thread(target=self._tweet_loop)
         self._tweet_thread.start()
@@ -244,7 +257,8 @@ def main():
             credentials.access_token, credentials.access_token_secret
         )
         api = tweepy.API(authorization)
-        bot = HaguEigoBot()
+        bot = HaguEigoBot(BotFunctions.TestOffline)
+        #bot = HaguEigoBot(BotFunctions.Full, api)
         #stream = tweepy.Stream(authorization, bot)
 
     except KeyboardInterrupt:
