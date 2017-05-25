@@ -1,17 +1,17 @@
 [
   {
-    "title": "FEEDFORMAT",
-    "text": "Testing first... Success.",
+    "title": "LOG_MESSAGE",
+    "text": "Testing a WHOLE LOTTA stuff, at once.",
     "chain": false
   },
   {
-    "title": "FEEDFORMAT2",
-    "text": "Testing second... Success.",
+    "title": "END",
+    "text": "This tweet should not have occurred...",
     "chain": false
   },
   {
-    "title": "FEEDFORMAT3",
-    "text": "Testing third... Success.",
+    "title": "THE THIRD",
+    "text": "Blah blah blah.",
     "chain": false
   }
 ]

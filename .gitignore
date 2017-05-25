@@ -90,5 +90,5 @@ ENV/
 
 # Project-related
 credentials.py
-.json.bak
-.bak
+*.json.bak
+.vscode/
