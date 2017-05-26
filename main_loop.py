@@ -31,6 +31,7 @@ class BotFunctions(Flags):
     WatchUserStream = 32    #Pull events from stream.userstream
     Interact = 64          #Unimplemented
     Everything = 127
+    TestStreamsOnly = 1+32
 
 
 class BotEvents(Enum):
@@ -42,7 +43,7 @@ class BotEvents(Enum):
     SYS_Disconnect = auto()
     SYS_Command = auto()
     USR_LoadTweet = auto()
-    USR_GetTweet = auto()
+    USR_PublishedTweet = auto()
     USR_GetRetweeted = auto()
     USR_GetQuoteRetweeted = auto()
     USR_GetFavorited = auto()
@@ -51,7 +52,7 @@ class BotEvents(Enum):
     USR_GetDM = auto()
     USR_GiveDM = auto()
     ERR_KeyboardInterrupt = auto()
-    ERR_Communications = auto()
+    ERR_UnhandledEvent = auto()
     ERR_UnauthorizedCommand = auto()
     ERR_Logic = auto()
 
@@ -185,55 +186,61 @@ class HaguEigoBot(tweepy.StreamListener):
                     )
                 return True
         except BaseException as my_event:
-            self.log_event(BotEvents.ERR_Communications, str(my_event), False)
+            self.log_event(BotEvents.ERR_Logic, str(my_event), False)
 
     def on_event(self, status):
         """ Called when a new event arrives.
         This responds to "favorite" and "quoted_tweet."
         """
-        print("Some sort of event occurred.")
         if status.event == "favorite": #This tends to come in delayed bunches
-            print("Somebody favorited one of my tweets!")
+            self.log_event(
+                BotEvents.USR_GetQuoteRetweeted,
+                "{}: {}".format(
+                    status.source.screen_name,
+                    status.target_object.id
+                    )
+            )
         elif status.event == "quoted_tweet":
-            print("Somebody quote-retweeted me!")
-            self.log_event(BotEvents.USR)
+            self.log_event(
+                BotEvents.USR_GetQuoteRetweeted,
+                "{}: {}".format(
+                    status.source['screen_name'],
+                    status.target_object['text']
+                    )
+            )
+        elif status.event == "unfavorite":
+            pass #feed tracking only requires updating tweet stats based on current totals
         else:
-            self.log_event(BotEvents.ERR_Communications, "Untracked event: " + status.event)
+            self.log_event(BotEvents.ERR_UnhandledEvent, "on_event: " + status.event)
 
     def on_status(self, status):
         """ Called when a new status arrives. """
-        print("Incoming status update.")
-        # self.log_event(
-        #     BotEvents.USR_GetTweet,
-        #     "\"{}: {}\"".format(
-        #         status.author.screen_name,
-        #         status.text
-        #         )
-        # )
-
-        print(status.author.screen_name)
-        if status.retweeted_status:
+        if hasattr(status, 'retweeted_status'):
             self.log_event(
-                BotEvents.USR_GetReply,
+                BotEvents.USR_GetRetweeted,
                 "{}: {}".format(
                     status.user.screen_name,
                     status.retweeted_status.id
                     )
             )
+        elif status.is_quote_status:
+            pass #Ignore; this will be picked up by on_event
         elif status.in_reply_to_user_id == HaguEigoBot.MY_ID:
             self.log_event(
-                BotEvents.USR_GetRetweeted,
+                BotEvents.USR_GetReply,
                 "{}: {}".format(
                     status.author.screen_name,
                     status.text
                     )
             )
+        elif status.author.id == HaguEigoBot.MY_ID and not status.in_reply_to_user_id:
+            self.log_event(BotEvents.USR_PublishedTweet, status.id)
+            #TODO: Register tweet in feed_tracking.json
         else:
             self.log_event(
-                BotEvents.USR_GetTweet,
-                str(status)
+                BotEvents.ERR_UnhandledEvent,
+                "on_status: " + str(status._json)
             )
-            print("I dunno how this status is related to me, yet.")
 
     def on_disconnect(self, notice):
         """ Called when Twitter submits an error """
