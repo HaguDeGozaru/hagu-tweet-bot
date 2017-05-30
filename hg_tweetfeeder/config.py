@@ -8,7 +8,7 @@ class Config:
     ''' Config data storage and processing for usage inside hg_tweetfeeder.bot '''
     def __init__(self):
         # EDIT THESE
-        tweet_time_strings = ['12:02']
+        tweet_time_strings = []
         self.min_tweet_delay = 10
         self.filenames = {
             "feed" : "./feeds/tweet_feed.json",

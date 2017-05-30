@@ -8,13 +8,13 @@ def main():
     # pylint: disable=no-member
     try:
 
-        bot = TweetFeeder(BotFunctions.TweetOnline|BotFunctions.LogEvents)
+        bot = TweetFeeder(BotFunctions.WatchUserStream|BotFunctions.LogToFile)
         stream = Stream(bot.config.authorization, bot)
         if BotFunctions.WatchUserStream in bot.functionality:
             stream.userstream()
 
     except KeyboardInterrupt:
-        bot.log_event(BotEvents.SYS_Stop, "Terminated at console.")
+        bot.log_event(BotEvents.SYS.StoppedByKeyboard, "Terminated at console.")
         bot.disconnect()
 
 if __name__ == "__main__":

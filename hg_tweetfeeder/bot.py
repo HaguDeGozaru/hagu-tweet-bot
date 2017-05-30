@@ -1,83 +1,43 @@
 ''' Module main class '''
 import os
-from time import sleep
-from threading import Thread
+import logging
 import datetime
 import json
+from time import sleep
+from threading import Thread
 from shutil import copyfile
-from enum import Enum, auto
-from flags import Flags
+from tweepy import API, StreamListener
 from .file_io import LoadFromFile
 from .config import Config
-from tweepy import API, StreamListener
-
-class BotFunctions(Flags):
-    """ Determines the functionality of a bot while running """
-    LogEvents = 1           #Write to event log file
-    TweetOffline = 2        #Run through tweets offline, merely printing them
-    SaveTweetIndex = 4      #Save tweeting progress in feed tracking JSON
-    TweetOnline = 8         #Tweet from feed_log (requires config.json)
-    SaveTweetStats = 16     #Save tweet IDs as they're tweeted plus...
-                            #...stats collected from stream.track
-    WatchUserStream = 32    #Pull events from stream.userstream
-    Interact = 64           #Unimplemented
-    Everything = 127
-    TestStreamsOnly = 1+32
-
-
-class BotEvents(Enum):
-    """ Event codes for saving to output JSON """
-    SYS_Setup = auto()
-    SYS_StartThread = auto()
-    SYS_Stop = auto()
-    SYS_Connect = auto()
-    SYS_Disconnect = auto()
-    SYS_Command = auto()
-    USR_LoadTweet = auto()
-    USR_PublishedTweet = auto()
-    USR_GetRetweeted = auto()
-    USR_GetQuoteRetweeted = auto()
-    USR_GetFavorited = auto()
-    USR_GetReply = auto()
-    USR_GiveReply = auto()
-    USR_GetDM = auto()
-    USR_GiveDM = auto()
-    ERR_KeyboardInterrupt = auto()
-    ERR_UnhandledEvent = auto()
-    ERR_UnauthorizedCommand = auto()
-    ERR_Logic = auto()
+from .flags import BotFunctions, BotEvents
+from .logs import log, log_setup
 
 class TweetFeeder(StreamListener):
-    '''
-    While running, refreshes a JSON feed and JSON settings file periodically
-    so as to deliver content to Twitter. Also, responds to Twitter inputs.
-    '''
-
-    @staticmethod
-    def _add_to_event_log_file(events):
-        """
-        Writes to log to preserve events
-        for debugging and review purposes.
-        """
-        print(events)
-        pass
-        # with open(EVENT_LOG, 'a', encoding="utf8", newline='\n') as logfile:
-        #     csv_writer = csv.DictWriter(logfile, ['time', 'type', 'text'])
-        #     csv_writer.writerows(events)
-        #     return True
-        # return False
-
+    """
+    Dual-threaded bot to post tweets periodically,
+    to track the tweets' performance, and to send alerts
+    to / take commands from a master Twitter account.
+    """
     def __init__(self, functionality=BotFunctions(), config=Config()):
         """
         Create a TweetFeeder bot,
         acquire authorization from Twitter (or run offline)
         """
-        self.functionality = functionality
-        self.log_event(
-            BotEvents.SYS_Setup,
-            "{:-<50}".format(str(functionality) if functionality else "Offline testing")
+        log_setup(
+            True,
+            config.filenames['log'] if (
+                BotFunctions.LogToFile in functionality
+                ) else "",
+            TweetFeeder.LogSender(self.send_dummy_dm) if (
+                BotFunctions.SendAlerts in functionality
+                ) else None
         )
-        print("{:-^80}".format(str(functionality) if functionality else "Offline testing"))
+
+        self.functionality = functionality
+        log(
+            BotEvents.SYS.Setup,
+            "{:-^80}".format(str(functionality) if functionality else "Offline testing")
+        )
 
         self.config = config
         self.api = API(config.authorization)
@@ -89,6 +49,25 @@ class TweetFeeder(StreamListener):
             self.running = True
             self._start_tweeting()
 
+    class LogSender:
+        """
+        Acts as a delegate container so that the logger module
+        can send log output over Twitter to the master account.
+        """
+        def __init__(self, send_method):
+            ''' Attach the send_method that will be called for write() '''
+            self.send_method = send_method
+
+        def write(self, text):
+            ''' If the text is substantial, forward it '''
+            if len(text) > 1: #This prevents unnecessary terminators from being sent
+
+                self.send_method(text)
+
+    def send_dummy_dm(self, text):
+        ''' Temporary implementation for sending logs over Twitter '''
+        self.api.send_direct_message(user=self.config.master_id, text=text)
+
     def on_connect(self):
         """Called once connected to streaming server.
 
@@ -96,37 +75,37 @@ class TweetFeeder(StreamListener):
         is received from the server. Allows the listener
         to perform some work prior to entering the read loop.
         """
-        self.log_event(BotEvents.SYS_Connect)
+        log(BotEvents.SYS.ThreadStart, "Streaming")
 
     def on_direct_message(self, status):
         """ Called when a new direct message arrives """
         try:
             if status.direct_message['sender_id'] != self.config.my_id:
-                self.log_event(
-                    BotEvents.USR_GetDM, "{}: {}".format(
+                log(
+                    BotEvents.NET.GetDM, "{}: {}".format(
                         status.direct_message['sender_screen_name'],
                         status.direct_message['text']
                         )
                     )
                 return True
         except BaseException as my_event:
-            self.log_event(BotEvents.ERR_Logic, str(my_event), False)
+            log(BotEvents.DBG.Warn, str(my_event))
 
     def on_event(self, status):
         """ Called when a new event arrives.
         This responds to "favorite" and "quoted_tweet."
         """
         if status.event == "favorite": #This tends to come in delayed bunches
-            self.log_event(
-                BotEvents.USR_GetQuoteRetweeted,
+            log(
+                BotEvents.NET.GetFavorite,
                 "{}: {}".format(
                     status.source.screen_name,
                     status.target_object.id
                     )
             )
         elif status.event == "quoted_tweet":
-            self.log_event(
-                BotEvents.USR_GetQuoteRetweeted,
+            log(
+                BotEvents.NET.GetQuoteRetweet,
                 "{}: {}".format(
                     status.source['screen_name'],
                     status.target_object['text']
@@ -135,13 +114,13 @@ class TweetFeeder(StreamListener):
         elif status.event == "unfavorite":
             pass #feed tracking only requires updating tweet stats based on current totals
         else:
-            self.log_event(BotEvents.ERR_UnhandledEvent, "on_event: " + status.event)
+            log(BotEvents.NET.GetUnknown, "on_event: " + status.event)
 
     def on_status(self, status):
         """ Called when a new status arrives. """
         if hasattr(status, 'retweeted_status'):
-            self.log_event(
-                BotEvents.USR_GetRetweeted,
+            log(
+                BotEvents.NET.GetRetweet,
                 "{}: {}".format(
                     status.user.screen_name,
                     status.retweeted_status.id
@@ -150,25 +129,25 @@ class TweetFeeder(StreamListener):
         elif status.is_quote_status:
             pass #Ignore; this will be picked up by on_event
         elif status.in_reply_to_user_id == self.config.my_id:
-            self.log_event(
-                BotEvents.USR_GetReply,
+            log(
+                BotEvents.NET.GetReply,
                 "{}: {}".format(
                     status.author.screen_name,
                     status.text
                     )
             )
         elif status.author.id == self.config.my_id and not status.in_reply_to_user_id:
-            self.log_event(BotEvents.USR_PublishedTweet, status.id)
+            log(BotEvents.NET.SendTweet, status.id)
             #TODO: Register tweet in feed_tracking.json
         else:
-            self.log_event(
-                BotEvents.ERR_UnhandledEvent,
+            log(
+                BotEvents.NET.GetUnknown,
                 "on_status: " + str(status)
             )
 
     def on_disconnect(self, notice):
         """ Called when Twitter submits an error """
-        self.log_event(BotEvents.SYS_Disconnect, notice)
+        log(BotEvents.SYS.ThreadStop, "Streaming: " + notice)
         self.running = False
 
     def get_next_tweet_datetime(self):
@@ -197,20 +176,8 @@ class TweetFeeder(StreamListener):
                 next_t = next_t.replace(hour=time[0], minute=time[1])
                 if now_t < next_t: # If next_t is in the future
                     return next_t.replace(second=0)
-
-        #No viable times were found
-        print("No time found!")
+        #Failure
         return None
-
-    def log_event(self, ev_type, text="", save=True):
-        """ Add an event to the event log before potentially saving. """
-        if BotFunctions.LogEvents in self.functionality:
-            event = dict()
-            event['time'] = datetime.datetime.now().strftime("%m/%d/%y %H:%M:%S")
-            event['type'] = str(ev_type)
-            event['text'] = text
-            if save and TweetFeeder._add_to_event_log_file(event):
-                self._event_log = []
 
     def update_feed_index(self, index):
         """ Wrapper for _save_tweet_data; updates feed index """
@@ -242,7 +209,7 @@ class TweetFeeder(StreamListener):
 
     def _start_tweeting(self):
         """ Begin normal functionality loop. """
-        self.log_event(BotEvents.SYS_StartThread, "Tweet loop")
+        log(BotEvents.SYS.ThreadStart, "Tweet loop")
         self._tweet_thread = Thread(target=self._tweet_loop)
         self._tweet_thread.start()
 
@@ -259,7 +226,7 @@ class TweetFeeder(StreamListener):
             next_index += 1
 
             if not next_tweets:
-                self.log_event(BotEvents.SYS_Stop, "No tweets given (ran out, probably)")
+                log(BotEvents.SYS.ThreadStop, "Tweet loop: tweets_at() failed")
                 self.running = False
                 break
 
@@ -268,7 +235,7 @@ class TweetFeeder(StreamListener):
             if next_time:
                 delta = next_time - datetime.datetime.now()
             else:
-                self.log_event(BotEvents.ERR_Logic, "Couldn't get next_time.")
+                log(BotEvents.SYS.ThreadStop, "Tweet loop: get_next_tweet_datetime() failed")
                 self.running = False
                 break
 
@@ -280,7 +247,7 @@ class TweetFeeder(StreamListener):
                 next_index,
                 next_tweets[-1]['title']
                 )
-            self.log_event(BotEvents.USR_LoadTweet, log_str)
+            log(BotEvents.SYS.LoadTweet, log_str)
             print(log_str)
 
             # Submit each tweet in chain (or just one, if not a chain)
@@ -293,4 +260,4 @@ class TweetFeeder(StreamListener):
                     sleep(self.config.min_tweet_delay.TWEET_DELAY)
             self.update_feed_index(next_index)
         # Running loop ended
-        self.log_event(BotEvents.SYS_Stop, "Tweet loop ended.")
+        log(BotEvents.SYS.ThreadStop, "Tweet loop ended.")

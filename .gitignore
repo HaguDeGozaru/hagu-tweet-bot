@@ -89,7 +89,7 @@ ENV/
 .ropeproject
 
 # Project-related
-credentials.py
-*.json.bak
+*.bak
+*.log
 .vscode/
 private/
