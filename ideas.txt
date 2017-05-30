@@ -8,3 +8,11 @@
 Take a trip to Pittsburg and experience
 the bloodlust for yourself!
 意訳》殺伐さを堪能できるピッツバーグの旅、皆さんもいかがでしょうか！
+
+'''
+TODO:
+Take commands using MASTER_ID
+favorite all replies
+make parallel JSON file to feed to track favorites + retweets
+log users' next tweet after retweeting bot's tweet
+'''
